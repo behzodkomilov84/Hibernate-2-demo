@@ -10,6 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import java.time.LocalDateTime;
 import java.util.Properties;
 
 public class Main {
@@ -80,8 +81,21 @@ public class Main {
 
     public static void main(String[] args) {
         Main main = new Main();
-
         Customer customer = main.createCustomer();
+
+        main.customerReturnInventoryToStore();
+    }
+
+    private void customerReturnInventoryToStore() {
+        try (Session session = sessionFactory.getCurrentSession()){
+            session.beginTransaction();
+
+            Rental rental = rentalDAO.getAnyUnreturnedRental();
+            rental.setReturnDate(LocalDateTime.now());
+            rentalDAO.save(rental);
+
+            session.getTransaction().commit();
+        }
     }
 
     private Customer createCustomer() {
