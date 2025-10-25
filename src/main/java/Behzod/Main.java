@@ -6,6 +6,7 @@ import Behzod.domain.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -37,8 +38,9 @@ public class Main {
         properties.put(Environment.URL, "jdbc:p6spy:mysql://localhost:3306/movie");
         properties.put(Environment.USER, "root");
         properties.put(Environment.PASS, "root");
-        properties.put(Environment.SHOW_SQL, "true");
-        properties.put(Environment.FORMAT_SQL, "true");
+        properties.put(Environment.SHOW_SQL, true);
+        properties.put(Environment.FORMAT_SQL, true);
+        properties.put(Environment.HIGHLIGHT_SQL, true);
         properties.put(Environment.HBM2DDL_AUTO, "validate");
         properties.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
 
@@ -85,12 +87,28 @@ public class Main {
     private Customer createCustomer() {
         try (Session session = sessionFactory.getCurrentSession()){
             session.beginTransaction();
-            Store store = storeDAO.getItems(0, 1).get(0);
+            Store store = storeDAO.getItems(0, 1).get(0); //TODO
 
-            City city = cityDAO.getByName("Akishima");
+            City city = cityDAO.getByName("Akishima"); //TODO
 
+            Address address = new Address();  //TODO
+            address.setCity(city);
+            address.setAddress("Bekobod, Shodlik 30");
+            address.setPhone("99-867-84-50");
+            address.setDistrict("Furqat");
+            addressDAO.save(address);
+
+            Customer customer = new Customer();
+            customer.setActive(true);
+            customer.setAddress(address);
+            customer.setEmail("behzodkomilov84@gmail.com");
+            customer.setFirstName("Behzod");
+            customer.setLastName("Komilov");
+            customer.setStore(store);
+            customerDAO.save(customer);
 
             session.getTransaction().commit();
+            return customer;
         }
     }
 }
