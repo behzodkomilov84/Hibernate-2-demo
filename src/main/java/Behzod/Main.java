@@ -10,6 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Properties;
 
@@ -81,9 +82,44 @@ public class Main {
 
     public static void main(String[] args) {
         Main main = new Main();
-        Customer customer = main.createCustomer();
 
-        main.customerReturnInventoryToStore();
+        Customer customer = main.createCustomer();
+//        main.customerReturnInventoryToStore();
+            main.customerRentInventory(customer);
+        
+    }
+
+    private void customerRentInventory(Customer customer) {
+        try (Session session = sessionFactory.getCurrentSession()){
+            session.beginTransaction();
+
+            Film film = filmDAO.getFirstAvailableFilmForRent();
+            Store store = storeDAO.getItems(0, 1).get(0); //TODO
+
+            Inventory inventory = new Inventory();
+            inventory.setFilm(film);
+            inventory.setStore(store);
+            inventoryDAO.save(inventory);
+
+            Staff staff = store.getStaff();
+
+            Rental rental = new Rental();
+            rental.setCustomer(customer);
+            rental.setInventory(inventory);
+            rental.setRentalDate(LocalDateTime.now());
+            rental.setStaff(staff);
+            rentalDAO.save(rental);
+
+            Payment payment = new Payment();
+            payment.setCustomer(customer);
+            payment.setRental(rental);
+            payment.setAmount(BigDecimal.valueOf(55.36));
+            payment.setStaff(staff);
+            payment.setPaymentDate(LocalDateTime.now());
+            paymentDAO.save(payment);
+
+            session.getTransaction().commit();
+        }
     }
 
     private void customerReturnInventoryToStore() {
