@@ -1,6 +1,9 @@
 package Behzod.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -8,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,6 +19,9 @@ import static java.util.Objects.isNull;
 
 @Entity
 @Table(schema = "movie", name = "film")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Film {
     @Id
     @Column(name = "film_id")
@@ -164,13 +171,21 @@ public class Film {
     public Set<Feature> getSpecialFeatures() {
         if (isNull(specialFeatures) || specialFeatures.isEmpty()) {
             return null;
-        } else {
-            Set<Feature> result = Arrays.stream(specialFeatures.split(","))
-                    .map(s -> Feature.getFeatureByValue(s))
-                    .collect(Collectors.toSet());
-            result.remove(null);
-            return result;
         }
+
+        /*Set<Feature> result = Arrays.stream(specialFeatures.split(","))
+                .map(s -> Feature.getFeatureByValue(s))
+                .collect(Collectors.toSet());
+        result.remove(null);*/
+
+        Set<Feature> result = new HashSet<>();
+        String[] features = specialFeatures.split(",");
+        for (String feature : features) {
+            result.add(Feature.getFeatureByValue(feature));
+        }
+        result.remove(null);
+        return result;
+
     }
 
     public void setSpecialFeatures(Set<Feature> features) {

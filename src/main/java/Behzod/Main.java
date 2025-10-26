@@ -5,14 +5,16 @@ import Behzod.dao.*;
 import Behzod.domain.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Year;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 public class Main {
     private final SessionFactory sessionFactory;
@@ -83,14 +85,49 @@ public class Main {
     public static void main(String[] args) {
         Main main = new Main();
 
-        Customer customer = main.createCustomer();
+//        Customer customer = main.createCustomer();
 //        main.customerReturnInventoryToStore();
-            main.customerRentInventory(customer);
-        
+//        main.customerRentInventory(customer);
+        main.newFilmWasMade();
+    }
+
+    private void newFilmWasMade() {
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.beginTransaction();
+
+            Language language = languageDAO.getItems(0, 20).stream().unordered().findAny().get();
+            List<Category> categories = categoryDAO.getItems(0, 5);
+            List<Actor> actors = actorDAO.getItems(0, 20);
+
+            Film film = new Film();
+            film.setActors(new HashSet<>(actors));
+            film.setLength(((short) 123));
+            film.setTitle("scary my-movie");
+            film.setCategories(new HashSet<>(categories));
+            film.setRating(Rating.NC17);
+            film.setRentalRate(BigDecimal.ZERO);
+            film.setRentalDuration(((byte) 44));
+            film.setYear(Year.now());
+            film.setDescription("new scary film");
+            film.setLanguage(language);
+            film.setOriginalLanguage(language);
+            film.setReplacementCost(BigDecimal.TEN);
+            film.setSpecialFeatures(Set.of(Feature.BEHIND_THE_SCENES, Feature.DELETED_SCENES));
+            filmDAO.save(film);
+
+            FilmText filmText = new FilmText();
+            filmText.setFilm(film);
+            filmText.setId(film.getId());
+            filmText.setTitle("scary my-movie");
+            filmText.setDescription("new scary film");
+            filmTextDAO.save(filmText);
+
+            session.getTransaction().commit();
+        }
     }
 
     private void customerRentInventory(Customer customer) {
-        try (Session session = sessionFactory.getCurrentSession()){
+        try (Session session = sessionFactory.getCurrentSession()) {
             session.beginTransaction();
 
             Film film = filmDAO.getFirstAvailableFilmForRent();
@@ -123,7 +160,7 @@ public class Main {
     }
 
     private void customerReturnInventoryToStore() {
-        try (Session session = sessionFactory.getCurrentSession()){
+        try (Session session = sessionFactory.getCurrentSession()) {
             session.beginTransaction();
 
             Rental rental = rentalDAO.getAnyUnreturnedRental();
@@ -135,7 +172,7 @@ public class Main {
     }
 
     private Customer createCustomer() {
-        try (Session session = sessionFactory.getCurrentSession()){
+        try (Session session = sessionFactory.getCurrentSession()) {
             session.beginTransaction();
             Store store = storeDAO.getItems(0, 1).get(0); //TODO
 
